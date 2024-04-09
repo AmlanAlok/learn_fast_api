@@ -4,9 +4,9 @@ from pydantic import BaseModel
 from typing import Optional
 
 app = FastAPI()
-'''The first bath operation that matches is the one which runs'''
+'''The first path operation that matches is the one which runs'''
 
-saved = [{'title':'t1', 'content': 'c1', 'id':1}, {'title':'t2', 'content': 'c2', 'id':2}]
+saved = [{'title': 't1', 'content': 'c1', 'id': 1}, {'title': 't2', 'content': 'c2', 'id': 2}]
 
 
 class Post(BaseModel):
@@ -18,7 +18,7 @@ class Post(BaseModel):
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}   # Automatically convert this Dictionary to JSON
+    return {"message": "Hello World"}  # Automatically convert this Dictionary to JSON
 
 
 # @app.post('/createposts')
@@ -29,7 +29,7 @@ async def root():
 def create_posts(post: Post):
     post_dict = post.dict()
     post_dict['id'] = 3
-    saved.append(post)
+    saved.append(post_dict)
     return {'data': post_dict}
 
 
@@ -39,8 +39,7 @@ def get_posts():
 
 
 @app.get('/posts/{id}')
-def get_post(id: int, response: Response):
-
+def get_post(id: int):
     for x in saved:
         if x['id'] == id:
             return {'post_detail': x}
@@ -49,9 +48,8 @@ def get_post(id: int, response: Response):
                         detail=f"Post with ID = {id} was not found")
 
 
-@app.delete('/posts/{id}')
-def delete_post(id: int, response: Response):
-
+@app.delete('/posts/{id}', status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id: int):
     delete_idx = None
     print(saved)
 
@@ -66,5 +64,26 @@ def delete_post(id: int, response: Response):
 
     del saved[delete_idx]
     print(saved)
-    return {'message': f"Post with ID = {id} is deleted"}
+    # return {'message': f"Post with ID = {id} is deleted"}
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+
+@app.put('/posts/{id}')
+def update_post(id: int, post: Post):
+    print(post)  # <class 'main.Post'>
+    print(type(post))
+    update_idx = None
+
+    for i, p in enumerate(saved):
+        if p['id'] == id:
+            update_idx = i
+
+    if update_idx is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Post with ID = {id} was not found")
+
+    post_dict = post.dict()  # <class 'dict'>
+    post_dict['id'] = id
+    saved[update_idx] = post_dict
+
+    return {'data': post_dict}
