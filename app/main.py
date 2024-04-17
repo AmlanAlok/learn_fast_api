@@ -2,6 +2,7 @@ from fastapi import FastAPI, Response, status, HTTPException
 from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
+import psycopg
 
 app = FastAPI()
 '''The first path operation that matches is the one which runs'''
@@ -13,7 +14,6 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = True
-    rating: Optional[int] = None
 
 
 @app.get("/")
